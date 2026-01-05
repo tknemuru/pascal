@@ -3,12 +3,17 @@
 import { motion, useMotionValue, animate, PanInfo } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
 import { calculateSnapPosition } from '@/src/utils/snapPhysics'
+import {
+  SQUARE_SIZE,
+  TARGET_SIZE,
+  DEFAULT_SNAP_THRESHOLD,
+} from '@/src/config/constants'
 
 export default function DraggableSquare() {
   const constraintsRef = useRef<HTMLDivElement>(null)
-  const [squareSize] = useState(120) // 4歳児に適した大きさ
-  const targetSize = 140 // ターゲット枠のサイズ（正方形より少し大きめ）
-  const snapThreshold = 50 // スナップ判定の閾値（px）
+  const [squareSize] = useState(SQUARE_SIZE)
+  const targetSize = TARGET_SIZE
+  const snapThreshold = DEFAULT_SNAP_THRESHOLD
 
   // framer-motionのMotionValueで位置を管理（再レンダリングなし）
   const x = useMotionValue(0)
