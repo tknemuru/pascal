@@ -1,5 +1,7 @@
 # Pascal - 4歳児のための知育パズルアプリ
 
+[![CI](https://github.com/tknemuru/pascal/actions/workflows/ci.yml/badge.svg)](https://github.com/tknemuru/pascal/actions/workflows/ci.yml)
+
 形パズルを通じて、4歳児の認知能力と手先の運動能力を育てる知育アプリです。
 
 ## 技術スタック
