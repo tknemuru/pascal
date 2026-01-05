@@ -1,0 +1,15 @@
+# Project: Pascal (Educational Shape Puzzle for 4yo)
+
+## Tech Stack
+
+- Next.js (App Router)
+- TypeScript
+- Tailwind CSS
+- framer-motion (for animations and D&D)
+
+## UX Guidelines for 4-year-olds
+
+- Large touch targets (min 44x44px).
+- Playful but sophisticated animations.
+- No complex gestures; stick to simple drag-and-drop and tap.
+- Prevent accidental scrolls or zooms (iPad optimization).
