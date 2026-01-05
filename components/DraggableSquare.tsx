@@ -8,12 +8,16 @@ import {
   TARGET_SIZE,
   DEFAULT_SNAP_THRESHOLD,
 } from '@/src/config/constants'
+import { useSnapSound } from '@/src/hooks/useSnapSound'
 
 export default function DraggableSquare() {
   const constraintsRef = useRef<HTMLDivElement>(null)
   const [squareSize] = useState(SQUARE_SIZE)
   const targetSize = TARGET_SIZE
   const snapThreshold = DEFAULT_SNAP_THRESHOLD
+
+  // スナップ音の再生フック
+  const { playSnapSound } = useSnapSound()
 
   // framer-motionのMotionValueで位置を管理（再レンダリングなし）
   const x = useMotionValue(0)
@@ -71,8 +75,11 @@ export default function DraggableSquare() {
       threshold: snapThreshold,
     })
     
-    // スナップすべき場合はアニメーションを実行
+    // スナップすべき場合はアニメーションと効果音を実行
     if (snapResult.shouldSnap) {
+      // スナップ音を再生
+      playSnapSound()
+      
       // MotionValueを直接アニメーション（Spring物理演算）
       animate(x, snapResult.snapX, {
         type: 'spring',
