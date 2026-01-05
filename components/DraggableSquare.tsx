@@ -2,6 +2,7 @@
 
 import { motion, useMotionValue, animate, PanInfo } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
+import { calculateSnapPosition } from '@/src/utils/snapPhysics'
 
 export default function DraggableSquare() {
   const constraintsRef = useRef<HTMLDivElement>(null)
@@ -52,37 +53,29 @@ export default function DraggableSquare() {
     const dropX = info.point.x
     const dropY = info.point.y
     
-    // 画面中央の座標を計算
+    // 画面中央の座標を計算（ターゲット位置）
     const centerX = window.innerWidth / 2
     const centerY = window.innerHeight / 2
     
-    // 画面中央との距離を計算
-    const distanceFromCenter = Math.sqrt(
-      Math.pow(dropX - centerX, 2) + Math.pow(dropY - centerY, 2)
-    )
-    
-    // デバッグ用（開発時のみ）
-    console.log('Drag ended at:', {
-      dropX: dropX.toFixed(1),
-      dropY: dropY.toFixed(1),
-      centerX: centerX.toFixed(1),
-      centerY: centerY.toFixed(1),
-      distance: distanceFromCenter.toFixed(1),
-      threshold: snapThreshold
+    // 純粋関数でスナップ判定を実行
+    const snapResult = calculateSnapPosition({
+      currentX: dropX,
+      currentY: dropY,
+      targetX: centerX,
+      targetY: centerY,
+      threshold: snapThreshold,
     })
     
-    // 閾値以内ならスナップ
-    if (distanceFromCenter <= snapThreshold) {
-      console.log('Snapping to center!')
-      
+    // スナップすべき場合はアニメーションを実行
+    if (snapResult.shouldSnap) {
       // MotionValueを直接アニメーション（Spring物理演算）
-      animate(x, 0, {
+      animate(x, snapResult.snapX, {
         type: 'spring',
         stiffness: 400,
         damping: 25,
       })
       
-      animate(y, 0, {
+      animate(y, snapResult.snapY, {
         type: 'spring',
         stiffness: 400,
         damping: 25,
