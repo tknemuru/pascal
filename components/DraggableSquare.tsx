@@ -9,6 +9,9 @@ import {
   DEFAULT_SNAP_THRESHOLD,
 } from '@/src/config/constants'
 import { useSnapSound } from '@/src/hooks/useSnapSound'
+import { AnimeEyes } from './AnimeEyes'
+import { useBlinkAnimation } from '@/src/hooks/useBlinkAnimation'
+import { useRandomColor } from '@/src/hooks/useRandomColor'
 
 export default function DraggableSquare() {
   const constraintsRef = useRef<HTMLDivElement>(null)
@@ -18,6 +21,12 @@ export default function DraggableSquare() {
 
   // スナップ音の再生フック
   const { playSnapSound } = useSnapSound()
+  
+  // まばたきアニメーションフック
+  const { isBlinking } = useBlinkAnimation()
+  
+  // ランダムな色を選択
+  const shapeColor = useRandomColor()
 
   // framer-motionのMotionValueで位置を管理（再レンダリングなし）
   const x = useMotionValue(0)
@@ -99,17 +108,13 @@ export default function DraggableSquare() {
     <div ref={constraintsRef} className="relative w-full h-full">
       {/* ターゲット枠（背面） */}
       <div 
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-4 border-white rounded-2xl bg-black/30"
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 border-4 border-white rounded-none bg-gray-800"
         style={{
           width: targetSize,
           height: targetSize,
           zIndex: 0,
         }}
-      >
-        <div className="w-full h-full flex items-center justify-center">
-          <span className="text-white/50 text-5xl select-none">□</span>
-        </div>
-      </div>
+      />
 
       {/* ドラッグ可能な正方形（前面） */}
       <motion.div
@@ -146,12 +151,13 @@ export default function DraggableSquare() {
         className="absolute cursor-grab"
       >
         <div 
-          className="w-full h-full bg-blue-500 rounded-2xl shadow-lg flex items-center justify-center"
+          className="w-full h-full rounded-none shadow-lg flex items-center justify-center"
           style={{
+            backgroundColor: shapeColor,
             touchAction: 'none',
           }}
         >
-          <div className="text-white text-4xl font-bold select-none">■</div>
+          <AnimeEyes isBlinking={isBlinking} />
         </div>
       </motion.div>
     </div>
