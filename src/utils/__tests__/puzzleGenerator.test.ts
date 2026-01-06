@@ -16,26 +16,30 @@ describe('puzzleGenerator', () => {
       expect(puzzle.targets.length).toBe(DIFFICULTY_CONFIG.easy.shapeCount)
     })
 
-    it('should generate puzzle with correct number of shapes for normal difficulty', () => {
+    it('should generate puzzle with template-based shapes for normal difficulty', () => {
+      // ふつうモードはテンプレートベースの生成
+      // 図形数はテンプレートに依存し、shapes と targets は1対1対応
       const puzzle = generatePuzzle({
         difficulty: 'normal',
         screenWidth: 800,
         screenHeight: 600,
       })
 
-      expect(puzzle.shapes.length).toBe(DIFFICULTY_CONFIG.normal.shapeCount)
-      expect(puzzle.targets.length).toBe(DIFFICULTY_CONFIG.normal.shapeCount)
+      expect(puzzle.shapes.length).toBeGreaterThanOrEqual(3)
+      expect(puzzle.targets.length).toBe(puzzle.shapes.length) // 1対1対応を保証
     })
 
-    it('should generate puzzle with correct number of shapes for hard difficulty', () => {
+    it('should generate puzzle with template-based shapes for hard difficulty', () => {
+      // むずかしいモードはテンプレートベースの生成
+      // 図形数はテンプレートに依存し、shapes と targets は1対1対応
       const puzzle = generatePuzzle({
         difficulty: 'hard',
         screenWidth: 800,
         screenHeight: 600,
       })
 
-      expect(puzzle.shapes.length).toBe(DIFFICULTY_CONFIG.hard.shapeCount)
-      expect(puzzle.targets.length).toBe(DIFFICULTY_CONFIG.hard.shapeCount)
+      expect(puzzle.shapes.length).toBeGreaterThanOrEqual(3)
+      expect(puzzle.targets.length).toBe(puzzle.shapes.length) // 1対1対応を保証
     })
 
     it('should generate shapes with valid properties', () => {

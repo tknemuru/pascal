@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateSnapPosition } from '../snapPhysics'
+import { calculateSnapPosition, calculateSimpleSnapPosition } from '../snapPhysics'
 import type { SnapCalculationInput } from '../snapPhysics'
 import { DEFAULT_SNAP_THRESHOLD } from '@/src/config/constants'
 
@@ -7,16 +7,16 @@ import { DEFAULT_SNAP_THRESHOLD } from '@/src/config/constants'
 const TEST_THRESHOLD = DEFAULT_SNAP_THRESHOLD
 
 describe('calculateSnapPosition', () => {
-  describe('Basic Snap (基本的なスナップ)', () => {
-    it('閾値以内（距離30px）の場合、ターゲットの中心にスナップする', () => {
-      // ターゲット: (500, 400)
-      // 現在: (530, 400) → 距離 30px
+  describe('Type Matching (型の一致チェック)', () => {
+    it('同じ型の図形の場合、閾値以内でスナップする', () => {
       const input: SnapCalculationInput = {
         currentX: 530,
         currentY: 400,
         targetX: 500,
         targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
       }
 
       const result = calculateSnapPosition(input)
@@ -24,17 +24,162 @@ describe('calculateSnapPosition', () => {
       expect(result.shouldSnap).toBe(true)
       expect(result.snapX).toBe(0)
       expect(result.snapY).toBe(0)
+      expect(result.failureReason).toBeUndefined()
     })
 
-    it('閾値以内で斜めの位置からもスナップする', () => {
-      // ターゲット: (500, 400)
-      // 現在: (520, 415) → 距離 √(20² + 15²) ≈ 25px
+    it('異なる型の図形の場合、閾値以内でもスナップしない', () => {
+      // 仕様書: 長方形の枠の中に二等辺三角形が入ったとしても、typeが異なるため吸着してはならない
       const input: SnapCalculationInput = {
-        currentX: 520,
-        currentY: 415,
+        currentX: 500,
+        currentY: 400,
         targetX: 500,
         targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'isoscelesTriangle',
+        targetShapeType: 'rectangle',
+      }
+
+      const result = calculateSnapPosition(input)
+
+      expect(result.shouldSnap).toBe(false)
+      expect(result.failureReason).toBe('type_mismatch')
+    })
+
+    it('正方形を長方形のターゲットに配置できない', () => {
+      const input: SnapCalculationInput = {
+        currentX: 500,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'rectangle',
+      }
+
+      const result = calculateSnapPosition(input)
+
+      expect(result.shouldSnap).toBe(false)
+      expect(result.failureReason).toBe('type_mismatch')
+    })
+
+    it('すべての図形タイプで型の一致が正しく機能する', () => {
+      const shapeTypes = [
+        'square',
+        'rectangle',
+        'parallelogram',
+        'equilateralTriangle',
+        'isoscelesTriangle',
+      ] as const
+
+      shapeTypes.forEach((shapeType) => {
+        const input: SnapCalculationInput = {
+          currentX: 500,
+          currentY: 400,
+          targetX: 500,
+          targetY: 400,
+          threshold: TEST_THRESHOLD,
+          shapeType,
+          targetShapeType: shapeType,
+        }
+
+        const result = calculateSnapPosition(input)
+
+        expect(result.shouldSnap).toBe(true)
+        expect(result.failureReason).toBeUndefined()
+      })
+    })
+  })
+
+  describe('Rotation Matching (回転角度の一致チェック)', () => {
+    it('回転角度が一致する場合、スナップする', () => {
+      const input: SnapCalculationInput = {
+        currentX: 500,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
+        currentRotation: 90,
+        requiredRotation: 90,
+      }
+
+      const result = calculateSnapPosition(input)
+
+      expect(result.shouldSnap).toBe(true)
+      expect(result.failureReason).toBeUndefined()
+    })
+
+    it('回転角度が一致しない場合、スナップしない', () => {
+      const input: SnapCalculationInput = {
+        currentX: 500,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
+        currentRotation: 0,
+        requiredRotation: 90,
+      }
+
+      const result = calculateSnapPosition(input)
+
+      expect(result.shouldSnap).toBe(false)
+      expect(result.failureReason).toBe('rotation_mismatch')
+    })
+
+    it('requiredRotationが未定義の場合、回転角度のチェックをスキップする', () => {
+      const input: SnapCalculationInput = {
+        currentX: 500,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
+        currentRotation: 90,
+        requiredRotation: undefined,
+      }
+
+      const result = calculateSnapPosition(input)
+
+      expect(result.shouldSnap).toBe(true)
+    })
+
+    it('すべての回転角度（0, 90, 180, 270）で正しく判定する', () => {
+      const rotations = [0, 90, 180, 270] as const
+
+      rotations.forEach((rotation) => {
+        const input: SnapCalculationInput = {
+          currentX: 500,
+          currentY: 400,
+          targetX: 500,
+          targetY: 400,
+          threshold: TEST_THRESHOLD,
+          shapeType: 'equilateralTriangle',
+          targetShapeType: 'equilateralTriangle',
+          currentRotation: rotation,
+          requiredRotation: rotation,
+        }
+
+        const result = calculateSnapPosition(input)
+
+        expect(result.shouldSnap).toBe(true)
+      })
+    })
+  })
+
+  describe('Distance Checking (距離判定)', () => {
+    it('閾値以内（距離30px）の場合、ターゲットの中心にスナップする', () => {
+      const input: SnapCalculationInput = {
+        currentX: 530,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
       }
 
       const result = calculateSnapPosition(input)
@@ -43,94 +188,35 @@ describe('calculateSnapPosition', () => {
       expect(result.snapX).toBe(0)
       expect(result.snapY).toBe(0)
     })
-  })
 
-  describe('No Snap (スナップしない)', () => {
-    it('閾値より遠い（距離60px）場合、スナップせず元の相対座標を返す', () => {
-      // ターゲット: (500, 400)
-      // 現在: (560, 400) → 距離 60px
+    it('閾値より遠い（距離60px）場合、スナップしない', () => {
       const input: SnapCalculationInput = {
         currentX: 560,
         currentY: 400,
         targetX: 500,
         targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
       }
 
       const result = calculateSnapPosition(input)
 
       expect(result.shouldSnap).toBe(false)
-      expect(result.snapX).toBe(60) // currentX - targetX
-      expect(result.snapY).toBe(0)  // currentY - targetY
+      expect(result.failureReason).toBe('distance_exceeded')
+      expect(result.snapX).toBe(60)
+      expect(result.snapY).toBe(0)
     })
 
-    it('閾値より遠い斜め位置でもスナップしない', () => {
-      // ターゲット: (500, 400)
-      // 現在: (550, 440) → 距離 √(50² + 40²) ≈ 64.03px
-      const input: SnapCalculationInput = {
-        currentX: 550,
-        currentY: 440,
-        targetX: 500,
-        targetY: 400,
-        threshold: TEST_THRESHOLD,
-      }
-
-      const result = calculateSnapPosition(input)
-
-      expect(result.shouldSnap).toBe(false)
-      expect(result.snapX).toBe(50)  // 550 - 500
-      expect(result.snapY).toBe(40)  // 440 - 400
-    })
-  })
-
-  describe('Boundary Cases (境界値)', () => {
     it('閾値ぴったりの場合、スナップする（閾値を含む）', () => {
-      // ターゲット: (500, 400)
-      // 現在: (530, 440) → 距離 √(30² + 40²) = 50px (閾値と同じ)
       const input: SnapCalculationInput = {
         currentX: 530,
         currentY: 440,
         targetX: 500,
         targetY: 400,
         threshold: TEST_THRESHOLD,
-      }
-
-      const result = calculateSnapPosition(input)
-
-      expect(result.shouldSnap).toBe(true)
-      expect(result.snapX).toBe(0)
-      expect(result.snapY).toBe(0)
-    })
-
-    it('閾値をわずかに超える場合、スナップしない', () => {
-      // ターゲット: (500, 400)
-      // 現在: (530, 440.1) → 距離 ≈ 50.1px (閾値を0.1px超える)
-      const input: SnapCalculationInput = {
-        currentX: 530,
-        currentY: 440.1,
-        targetX: 500,
-        targetY: 400,
-        threshold: TEST_THRESHOLD,
-      }
-
-      const result = calculateSnapPosition(input)
-
-      expect(result.shouldSnap).toBe(false)
-      expect(result.snapX).toBe(30)
-      expect(result.snapY).toBeCloseTo(40.1, 5)
-    })
-  })
-
-  describe('Zero Distance (距離ゼロ)', () => {
-    it('ターゲットと完全に重なっている（距離0）場合も正しくスナップ判定される', () => {
-      // ターゲット: (500, 400)
-      // 現在: (500, 400) → 距離 0px
-      const input: SnapCalculationInput = {
-        currentX: 500,
-        currentY: 400,
-        targetX: 500,
-        targetY: 400,
-        threshold: TEST_THRESHOLD,
+        shapeType: 'rectangle',
+        targetShapeType: 'rectangle',
       }
 
       const result = calculateSnapPosition(input)
@@ -141,91 +227,70 @@ describe('calculateSnapPosition', () => {
     })
   })
 
-  describe('Edge Cases (エッジケース)', () => {
-    it('負の座標でも正しく動作する', () => {
-      // ターゲット: (-100, -50)
-      // 現在: (-120, -50) → 距離 20px
+  describe('Combined Checks (複合チェック)', () => {
+    it('型・回転・距離がすべて一致する場合のみスナップする', () => {
       const input: SnapCalculationInput = {
-        currentX: -120,
-        currentY: -50,
-        targetX: -100,
-        targetY: -50,
+        currentX: 520,
+        currentY: 410,
+        targetX: 500,
+        targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'isoscelesTriangle',
+        targetShapeType: 'isoscelesTriangle',
+        currentRotation: 180,
+        requiredRotation: 180,
       }
 
       const result = calculateSnapPosition(input)
 
       expect(result.shouldSnap).toBe(true)
-      expect(result.snapX).toBe(0)
-      expect(result.snapY).toBe(0)
     })
 
-    it('閾値が0の場合、完全一致のみスナップする', () => {
-      // ターゲット: (500, 400)
-      // 現在: (500, 400) → 距離 0px
+    it('型が一致しても距離が閾値を超えるとスナップしない', () => {
       const input: SnapCalculationInput = {
-        currentX: 500,
+        currentX: 600,
         currentY: 400,
         targetX: 500,
         targetY: 400,
-        threshold: 0,
-      }
-
-      const result = calculateSnapPosition(input)
-
-      expect(result.shouldSnap).toBe(true)
-      expect(result.snapX).toBe(0)
-      expect(result.snapY).toBe(0)
-    })
-
-    it('閾値が0で少しでもズレていればスナップしない', () => {
-      // ターゲット: (500, 400)
-      // 現在: (500.1, 400) → 距離 0.1px
-      const input: SnapCalculationInput = {
-        currentX: 500.1,
-        currentY: 400,
-        targetX: 500,
-        targetY: 400,
-        threshold: 0,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'square',
+        targetShapeType: 'square',
       }
 
       const result = calculateSnapPosition(input)
 
       expect(result.shouldSnap).toBe(false)
-      expect(result.snapX).toBeCloseTo(0.1, 5)
-      expect(result.snapY).toBe(0)
+      expect(result.failureReason).toBe('distance_exceeded')
     })
 
-    it('大きな閾値（1000px）でも正しく動作する', () => {
-      // ターゲット: (500, 400)
-      // 現在: (1200, 800) → 距離 √(700² + 400²) ≈ 806.23px
+    it('距離が閾値以内でも型が異なるとスナップしない', () => {
       const input: SnapCalculationInput = {
-        currentX: 1200,
-        currentY: 800,
+        currentX: 510,
+        currentY: 400,
         targetX: 500,
         targetY: 400,
-        threshold: 1000,
+        threshold: TEST_THRESHOLD,
+        shapeType: 'parallelogram',
+        targetShapeType: 'rectangle',
       }
 
       const result = calculateSnapPosition(input)
 
-      expect(result.shouldSnap).toBe(true)
-      expect(result.snapX).toBe(0)
-      expect(result.snapY).toBe(0)
+      expect(result.shouldSnap).toBe(false)
+      expect(result.failureReason).toBe('type_mismatch')
     })
   })
 
   describe('Realistic Scenarios (実用的なシナリオ)', () => {
     it('4歳児向けアプリの実際の画面サイズでの動作確認', () => {
-      // iPad画面の中央: (512, 384)
-      // ドラッグ終了位置: (530, 400)
-      // 距離: √(18² + 16²) ≈ 24.08px (閾値以内)
       const input: SnapCalculationInput = {
         currentX: 530,
         currentY: 400,
         targetX: 512,
         targetY: 384,
         threshold: TEST_THRESHOLD,
+        shapeType: 'equilateralTriangle',
+        targetShapeType: 'equilateralTriangle',
       }
 
       const result = calculateSnapPosition(input)
@@ -235,16 +300,17 @@ describe('calculateSnapPosition', () => {
       expect(result.snapY).toBe(0)
     })
 
-    it('タッチ操作で少しズレた場合（距離45px）もスナップする', () => {
-      // 画面中央: (512, 384)
-      // ドロップ位置: (550, 410)
-      // 距離: √(38² + 26²) ≈ 46.04px
+    it('むずかしいモード: 正しい図形と回転で配置成功', () => {
       const input: SnapCalculationInput = {
-        currentX: 550,
-        currentY: 410,
-        targetX: 512,
-        targetY: 384,
+        currentX: 520,
+        currentY: 390,
+        targetX: 500,
+        targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'isoscelesTriangle',
+        targetShapeType: 'isoscelesTriangle',
+        currentRotation: 270,
+        requiredRotation: 270,
       }
 
       const result = calculateSnapPosition(input)
@@ -252,23 +318,53 @@ describe('calculateSnapPosition', () => {
       expect(result.shouldSnap).toBe(true)
     })
 
-    it('画面の端に投げた場合はスナップしない', () => {
-      // 画面中央: (512, 384)
-      // ドロップ位置: (700, 384)
-      // 距離: 188px (閾値を大きく超える)
+    it('むずかしいモード: 正しい図形でも回転が違うと配置失敗', () => {
       const input: SnapCalculationInput = {
-        currentX: 700,
-        currentY: 384,
-        targetX: 512,
-        targetY: 384,
+        currentX: 500,
+        currentY: 400,
+        targetX: 500,
+        targetY: 400,
         threshold: TEST_THRESHOLD,
+        shapeType: 'isoscelesTriangle',
+        targetShapeType: 'isoscelesTriangle',
+        currentRotation: 0,
+        requiredRotation: 90,
       }
 
       const result = calculateSnapPosition(input)
 
       expect(result.shouldSnap).toBe(false)
-      expect(result.snapX).toBe(188)
-      expect(result.snapY).toBe(0)
+      expect(result.failureReason).toBe('rotation_mismatch')
     })
+  })
+})
+
+describe('calculateSimpleSnapPosition (後方互換性)', () => {
+  it('座標のみで判定する簡易版が正しく動作する', () => {
+    const result = calculateSimpleSnapPosition({
+      currentX: 520,
+      currentY: 400,
+      targetX: 500,
+      targetY: 400,
+      threshold: TEST_THRESHOLD,
+    })
+
+    expect(result.shouldSnap).toBe(true)
+    expect(result.snapX).toBe(0)
+    expect(result.snapY).toBe(0)
+  })
+
+  it('閾値を超える場合はスナップしない', () => {
+    const result = calculateSimpleSnapPosition({
+      currentX: 600,
+      currentY: 400,
+      targetX: 500,
+      targetY: 400,
+      threshold: TEST_THRESHOLD,
+    })
+
+    expect(result.shouldSnap).toBe(false)
+    expect(result.snapX).toBe(100)
+    expect(result.snapY).toBe(0)
   })
 })

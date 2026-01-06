@@ -38,13 +38,13 @@ export function TargetArea({ targets, showGridLines }: TargetAreaProps) {
               isTarget={true}
             />
           ) : (
-            // ふつう・むずかしいモード: 配置可能エリアのみ表示
+            // ふつう・むずかしいモード: 個別の枠線は一切表示しない（シルエットのみ）
+            // CSS実装: border: none（仕様書準拠）
             <div
               style={{
                 width: target.width,
                 height: target.height,
-                border: '2px dashed rgba(255,255,255,0.2)',
-                borderRadius: 4,
+                border: 'none',
               }}
             />
           )}

@@ -1,7 +1,9 @@
 /**
  * パズル生成システム
  *
- * 難易度に応じたパズルテンプレートをランダムに生成します。
+ * 難易度に応じたパズルテンプレートを生成します。
+ * - かんたん: グリッド配置（ランダム生成）
+ * - ふつう・むずかしい: テンプレートベースの密集配置
  */
 
 import type {
@@ -22,6 +24,7 @@ import {
   EQUILATERAL_TRIANGLE_SIZE,
   ISOSCELES_TRIANGLE_SIZE,
 } from '@/src/config/constants'
+import { getRandomTemplate, type TemplateShape } from '@/src/config/puzzleTemplates'
 
 // ============================================
 // ユーティリティ関数
@@ -105,7 +108,7 @@ function createShape(type: ShapeType, rotation: Rotation = 0): Shape {
 }
 
 // ============================================
-// ターゲットエリア配置計算
+// グリッド配置（かんたんモード用）
 // ============================================
 
 interface LayoutConfig {
@@ -116,9 +119,9 @@ interface LayoutConfig {
 }
 
 /**
- * グリッドベースでターゲット位置を計算
+ * グリッドベースでターゲット位置を計算（かんたんモード用）
  */
-function calculateTargetPositions(
+function calculateGridPositions(
   shapes: Shape[],
   layout: LayoutConfig
 ): { x: number; y: number }[] {
@@ -152,18 +155,17 @@ function calculateTargetPositions(
  * 初期位置を計算（ターゲットエリアの外側）
  */
 function calculateInitialPositions(
-  shapes: Shape[],
+  count: number,
   screenWidth: number,
-  screenHeight: number,
-  targetAreaHeight: number
+  screenHeight: number
 ): { x: number; y: number }[] {
   const positions: { x: number; y: number }[] = []
 
   // 下部に配置
   const bottomY = screenHeight - 100
-  const spacing = screenWidth / (shapes.length + 1)
+  const spacing = screenWidth / (count + 1)
 
-  for (let i = 0; i < shapes.length; i++) {
+  for (let i = 0; i < count; i++) {
     positions.push({
       x: spacing * (i + 1),
       y: bottomY,
@@ -174,23 +176,19 @@ function calculateInitialPositions(
 }
 
 // ============================================
-// パズル生成
+// かんたんモード用パズル生成
 // ============================================
 
-export interface GeneratePuzzleOptions {
-  difficulty: Difficulty
-  screenWidth: number
-  screenHeight: number
-}
-
 /**
- * パズルテンプレートを生成
+ * かんたんモード用のパズルを生成（グリッド配置）
  */
-export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
-  const { difficulty, screenWidth, screenHeight } = options
-  const config = DIFFICULTY_CONFIG[difficulty]
+function generateEasyPuzzle(
+  screenWidth: number,
+  screenHeight: number
+): PuzzleTemplate {
+  const config = DIFFICULTY_CONFIG.easy
 
-  // 使用する図形タイプを選択
+  // 使用する図形タイプをランダムに選択
   const selectedTypes: ShapeType[] = []
   const availableTypes = [...config.availableShapes]
 
@@ -199,12 +197,8 @@ export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
     selectedTypes.push(type)
   }
 
-  // 図形を生成
-  const shapes: Shape[] = selectedTypes.map((type) => {
-    // むずかしいモードでは回転が必要な場合がある
-    const rotation: Rotation = config.enableRotation ? randomRotation() : 0
-    return createShape(type, rotation)
-  })
+  // 図形を生成（回転なし）
+  const shapes: Shape[] = selectedTypes.map((type) => createShape(type, 0))
 
   // ターゲットエリアの設定
   const targetAreaWidth = Math.min(screenWidth * 0.8, 500)
@@ -212,8 +206,8 @@ export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
   const centerX = screenWidth / 2
   const centerY = screenHeight / 2 - 50
 
-  // ターゲット位置を計算
-  const targetPositions = calculateTargetPositions(shapes, {
+  // グリッド位置を計算
+  const targetPositions = calculateGridPositions(shapes, {
     centerX,
     centerY,
     targetAreaWidth,
@@ -222,10 +216,9 @@ export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
 
   // 初期位置を計算
   const initialPositions = calculateInitialPositions(
-    shapes,
+    shapes.length,
     screenWidth,
-    screenHeight,
-    targetAreaHeight
+    screenHeight
   )
 
   // ターゲットスロットを作成
@@ -236,13 +229,86 @@ export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
     y: targetPositions[index].y,
     width: shape.width,
     height: shape.height,
-    requiredRotation: config.enableRotation ? shape.rotation : undefined,
+    requiredRotation: undefined,
   }))
 
-  // ドラッグ可能な図形スロットを作成
+  // ドラッグ可能な図形スロットを作成（Deep Copy）
   const draggableShapes: DraggableShapeSlot[] = shapes.map((shape, index) => ({
     shape: {
       ...shape,
+      id: generateId(), // 新しいIDを生成して完全に独立させる
+    },
+    initialX: initialPositions[index].x,
+    initialY: initialPositions[index].y,
+    isPlaced: false,
+  }))
+
+  return {
+    shapes: draggableShapes,
+    targets,
+  }
+}
+
+// ============================================
+// ふつう・むずかしいモード用パズル生成（テンプレートベース）
+// ============================================
+
+/**
+ * テンプレートベースのパズルを生成（ふつう・むずかしいモード用）
+ */
+function generateTemplatePuzzle(
+  difficulty: 'normal' | 'hard',
+  screenWidth: number,
+  screenHeight: number
+): PuzzleTemplate {
+  const config = DIFFICULTY_CONFIG[difficulty]
+
+  // テンプレートをランダムに選択
+  const template = getRandomTemplate()
+
+  // テンプレートの中心座標を計算
+  const centerX = screenWidth / 2
+  const centerY = screenHeight / 2 - 50
+
+  // テンプレートから図形を生成
+  const shapes: Shape[] = template.shapes.map((templateShape: TemplateShape) => {
+    // むずかしいモードでは回転を有効に
+    const rotation: Rotation = config.enableRotation
+      ? (templateShape.rotation ?? 0)
+      : 0
+    return createShape(templateShape.type, rotation)
+  })
+
+  // ターゲットスロットを作成（テンプレートの座標を使用）
+  const targets: TargetSlot[] = template.shapes.map((templateShape: TemplateShape, index: number) => {
+    const shape = shapes[index]
+    const rotation: Rotation = config.enableRotation
+      ? (templateShape.rotation ?? 0)
+      : 0
+
+    return {
+      id: `target-${shape.id}`,
+      shapeType: templateShape.type,
+      x: centerX + templateShape.relativeX,
+      y: centerY + templateShape.relativeY,
+      width: shape.width,
+      height: shape.height,
+      requiredRotation: config.enableRotation ? rotation : undefined,
+    }
+  })
+
+  // 初期位置を計算
+  const initialPositions = calculateInitialPositions(
+    shapes.length,
+    screenWidth,
+    screenHeight
+  )
+
+  // ドラッグ可能な図形スロットを作成（Deep Copy - 1対1対応を保証）
+  const draggableShapes: DraggableShapeSlot[] = shapes.map((shape, index) => ({
+    shape: {
+      ...shape,
+      id: generateId(), // 新しいIDを生成して完全に独立させる
       // 初期回転は0にリセット（むずかしいモードでユーザーが回転させる）
       rotation: 0,
     },
@@ -254,6 +320,42 @@ export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
   return {
     shapes: draggableShapes,
     targets,
+  }
+}
+
+// ============================================
+// パズル生成（メインエントリポイント）
+// ============================================
+
+export interface GeneratePuzzleOptions {
+  difficulty: Difficulty
+  screenWidth: number
+  screenHeight: number
+}
+
+/**
+ * パズルテンプレートを生成
+ *
+ * 難易度に応じて生成方法を分岐:
+ * - かんたん: グリッド配置（ランダム生成）
+ * - ふつう・むずかしい: テンプレートベースの密集配置
+ */
+export function generatePuzzle(options: GeneratePuzzleOptions): PuzzleTemplate {
+  const { difficulty, screenWidth, screenHeight } = options
+
+  switch (difficulty) {
+    case 'easy':
+      // かんたんモード: グリッド配置
+      return generateEasyPuzzle(screenWidth, screenHeight)
+
+    case 'normal':
+    case 'hard':
+      // ふつう・むずかしいモード: テンプレートベース
+      return generateTemplatePuzzle(difficulty, screenWidth, screenHeight)
+
+    default:
+      // フォールバック
+      return generateEasyPuzzle(screenWidth, screenHeight)
   }
 }
 
