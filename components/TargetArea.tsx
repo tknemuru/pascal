@@ -38,14 +38,15 @@ export function TargetArea({ targets, showGridLines }: TargetAreaProps) {
               isTarget={true}
             />
           ) : (
-            // ふつう・むずかしいモード: 個別の枠線は一切表示しない（シルエットのみ）
-            // CSS実装: border: none（仕様書準拠）
-            <div
-              style={{
-                width: target.width,
-                height: target.height,
-                border: 'none',
-              }}
+            // ふつう・むずかしいモード: シルエットとして塗りつぶしを表示（個別の枠線なし）
+            // テンプレート全体が一つの形状として見えるようにする
+            <ShapeRenderer
+              type={target.shapeType}
+              color="rgba(100, 100, 100, 0.6)"
+              rotation={target.requiredRotation}
+              showEyes={false}
+              isTarget={true}
+              showBorder={false}
             />
           )}
         </div>
