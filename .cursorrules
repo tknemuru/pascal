@@ -35,3 +35,12 @@
   - (E2Eテストは焦点を絞り高速に保つ。単体テストでカバーできる実装詳細はテストしない)
 - Run E2E tests in CI to prevent regressions before deployment.
   - (デプロイ前にリグレッションを防ぐため、CIでE2Eテストを実行する)
+
+## AI Implementation Workflow
+
+- By default, focus on implementation only without running tests.
+  - (デフォルトでは、テスト実行せず実装のみに集中する)
+- Run tests only when the user explicitly requests it with phrases like "run tests" or "test this."
+  - (ユーザーが「テストを実行して」「テストして」などと明示的に指示した場合のみテストを実行する)
+- This policy improves implementation speed and allows users to control when tests are executed.
+  - (この方針により実装速度が向上し、ユーザーがテスト実行タイミングをコントロールできる)
