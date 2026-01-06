@@ -13,3 +13,25 @@
 - Playful but sophisticated animations.
 - No complex gestures; stick to simple drag-and-drop and tap.
 - Prevent accidental scrolls or zooms (iPad optimization).
+
+## Code Quality & Testing Guidelines
+
+- Separate pure logic from view components to improve testability.
+  - (純粋なロジックとViewを分離してテストしやすいコードを意識する)
+- Create test code alongside logic implementation when it provides significant value for bug detection.
+  - (ロジックに対するテストコードの作成が有益である場合はテストコードを一緒に作成する)
+- Write tests that balance bug detection effectiveness with maintainability; avoid excessive test bloat.
+  - (バグ検知観点での有益性、メンテナンス性を意識し、いたずらにテストコードを増やさない)
+- Focus on testing business logic and critical paths rather than trivial implementation details.
+  - (ビジネスロジックと重要なパスに焦点を当て、些細な実装詳細のテストは避ける)
+
+### E2E Testing Strategy
+
+- Implement E2E tests for critical user paths that directly impact the 4-year-old user experience.
+  - (4歳児のユーザー体験に直接影響するクリティカルパスのE2Eテストを実装する)
+- Prioritize tests that catch rendering failures and core interaction bugs early.
+  - (レンダリング失敗やコアとなるインタラクションのバグを早期に検知するテストを優先する)
+- Keep E2E tests focused and fast; avoid testing implementation details that unit tests cover.
+  - (E2Eテストは焦点を絞り高速に保つ。単体テストでカバーできる実装詳細はテストしない)
+- Run E2E tests in CI to prevent regressions before deployment.
+  - (デプロイ前にリグレッションを防ぐため、CIでE2Eテストを実行する)
