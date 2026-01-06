@@ -6,6 +6,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.{test,spec}.{ts,tsx}'],
+    exclude: [
+      'node_modules',
+      'playwright.config.ts',
+      'tests/e2e/**',
+    ],
   },
   resolve: {
     alias: {
