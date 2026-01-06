@@ -36,3 +36,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 仕様画像ファイル
+docs/specs/*.HEIC
+docs/specs/*.heic
+docs/specs/*.png
+docs/specs/*.jpg
+docs/specs/*.jpeg
