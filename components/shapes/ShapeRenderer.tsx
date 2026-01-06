@@ -17,6 +17,7 @@ interface ShapeRendererProps {
   isBlinking?: boolean
   showEyes?: boolean
   isTarget?: boolean
+  showBorder?: boolean
 }
 
 /**
@@ -29,6 +30,7 @@ export function ShapeRenderer({
   isBlinking = false,
   showEyes = true,
   isTarget = false,
+  showBorder = true,
 }: ShapeRendererProps) {
   const baseStyle = {
     transform: `rotate(${rotation}deg)`,
@@ -48,8 +50,8 @@ export function ShapeRenderer({
             ...baseStyle,
             width: SQUARE_SIZE,
             height: SQUARE_SIZE,
-            backgroundColor: isTarget ? 'transparent' : color,
-            border: isTarget ? '3px dashed rgba(255,255,255,0.5)' : 'none',
+            backgroundColor: isTarget && showBorder ? 'transparent' : color,
+            border: isTarget && showBorder ? '3px dashed rgba(255,255,255,0.5)' : 'none',
             borderRadius: 4,
           }}
           className="flex items-center justify-center shadow-lg"
@@ -65,8 +67,8 @@ export function ShapeRenderer({
             ...baseStyle,
             width: RECTANGLE_SIZE.width,
             height: RECTANGLE_SIZE.height,
-            backgroundColor: isTarget ? 'transparent' : color,
-            border: isTarget ? '3px dashed rgba(255,255,255,0.5)' : 'none',
+            backgroundColor: isTarget && showBorder ? 'transparent' : color,
+            border: isTarget && showBorder ? '3px dashed rgba(255,255,255,0.5)' : 'none',
             borderRadius: 4,
           }}
           className="flex items-center justify-center shadow-lg"
@@ -92,10 +94,10 @@ export function ShapeRenderer({
           >
             <polygon
               points={`${PARALLELOGRAM_SIZE.skew},0 ${PARALLELOGRAM_SIZE.width},0 ${PARALLELOGRAM_SIZE.width - PARALLELOGRAM_SIZE.skew},${PARALLELOGRAM_SIZE.height} 0,${PARALLELOGRAM_SIZE.height}`}
-              fill={isTarget ? 'transparent' : color}
-              stroke={isTarget ? 'rgba(255,255,255,0.5)' : 'none'}
-              strokeWidth={isTarget ? 3 : 0}
-              strokeDasharray={isTarget ? '8,4' : 'none'}
+              fill={isTarget && showBorder ? 'transparent' : color}
+              stroke={isTarget && showBorder ? 'rgba(255,255,255,0.5)' : 'none'}
+              strokeWidth={isTarget && showBorder ? 3 : 0}
+              strokeDasharray={isTarget && showBorder ? '8,4' : 'none'}
             />
           </svg>
           <div className="absolute">{eyesElement}</div>
@@ -117,10 +119,10 @@ export function ShapeRenderer({
           <svg width={eqBase} height={eqHeight} viewBox={`0 0 ${eqBase} ${eqHeight}`}>
             <polygon
               points={`${eqBase / 2},0 ${eqBase},${eqHeight} 0,${eqHeight}`}
-              fill={isTarget ? 'transparent' : color}
-              stroke={isTarget ? 'rgba(255,255,255,0.5)' : 'none'}
-              strokeWidth={isTarget ? 3 : 0}
-              strokeDasharray={isTarget ? '8,4' : 'none'}
+              fill={isTarget && showBorder ? 'transparent' : color}
+              stroke={isTarget && showBorder ? 'rgba(255,255,255,0.5)' : 'none'}
+              strokeWidth={isTarget && showBorder ? 3 : 0}
+              strokeDasharray={isTarget && showBorder ? '8,4' : 'none'}
             />
           </svg>
           <div className="absolute" style={{ top: '50%' }}>
@@ -144,10 +146,10 @@ export function ShapeRenderer({
           <svg width={isoBase} height={isoHeight} viewBox={`0 0 ${isoBase} ${isoHeight}`}>
             <polygon
               points={`${isoBase / 2},0 ${isoBase},${isoHeight} 0,${isoHeight}`}
-              fill={isTarget ? 'transparent' : color}
-              stroke={isTarget ? 'rgba(255,255,255,0.5)' : 'none'}
-              strokeWidth={isTarget ? 3 : 0}
-              strokeDasharray={isTarget ? '8,4' : 'none'}
+              fill={isTarget && showBorder ? 'transparent' : color}
+              stroke={isTarget && showBorder ? 'rgba(255,255,255,0.5)' : 'none'}
+              strokeWidth={isTarget && showBorder ? 3 : 0}
+              strokeDasharray={isTarget && showBorder ? '8,4' : 'none'}
             />
           </svg>
           <div className="absolute" style={{ top: '55%' }}>
