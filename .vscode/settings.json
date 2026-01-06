@@ -1,0 +1,9 @@
+{
+    "terminal.integrated.sendKeybindingsToShell": true,
+    "terminal.integrated.commandsToSkipShell": [
+      "workbench.action.terminal.copySelection",
+      "workbench.action.terminal.pasteSelection"
+    ],
+    "terminal.integrated.rightClickBehavior": "copyPaste",
+    "terminal.integrated.copyOnSelection": true
+  }

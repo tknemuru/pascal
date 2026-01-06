@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { GameProvider } from '@/src/store/gameStore'
 
 export const metadata: Metadata = {
   title: 'Pascal - 知育パズル',
@@ -30,7 +31,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body>{children}</body>
+      <body>
+        <GameProvider>{children}</GameProvider>
+      </body>
     </html>
   )
 }
