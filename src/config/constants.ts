@@ -99,7 +99,7 @@ export const DIFFICULTY_CONFIG: Record<Difficulty, {
     shapeCount: 4,
     showGridLines: false,
     enableRotation: false,
-    availableShapes: ['square', 'rectangle', 'parallelogram', 'equilateralTriangle'],
+    availableShapes: ['square', 'rectangle', 'parallelogram', 'equilateralTriangle', 'isoscelesTriangle'],
     label: 'ふつう',
   },
   hard: {
