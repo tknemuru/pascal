@@ -38,6 +38,17 @@
 
 ## AI Implementation Workflow
 
+### Planning Requirement
+
+- For any non-trivial changes, always create a plan first and align with the user before implementation.
+  - (軽微な変更以外は、必ず最初に計画を作成し、実装前にユーザーとすり合わせを行う)
+- Trivial changes include: minor text fixes, simple formatting adjustments, or single-line code corrections.
+  - (軽微な変更には、小さなテキスト修正、単純なフォーマット調整、1行のコード修正などが含まれる)
+- For complex features or refactoring, break down the plan into clear steps and confirm the approach.
+  - (複雑な機能やリファクタリングの場合は、計画を明確なステップに分解し、アプローチを確認する)
+
+### Test Execution Policy
+
 - By default, focus on implementation only without running tests.
   - (デフォルトでは、テスト実行せず実装のみに集中する)
 - Run tests only when the user explicitly requests it with phrases like "run tests" or "test this."

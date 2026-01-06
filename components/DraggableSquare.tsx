@@ -82,6 +82,8 @@ export default function DraggableSquare() {
       targetX: centerX,
       targetY: centerY,
       threshold: snapThreshold,
+      shapeType: 'square',
+      targetShapeType: 'square',
     })
     
     // スナップすべき場合はアニメーションと効果音を実行
